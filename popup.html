@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daily Shuffle</title><link rel="stylesheet" href="ui.css"></head>
+<body class="popup">
+  <header><span class="eyebrow">A FRESH CHALLENGE</span><h1>Daily Shuffle</h1><p>One click. A puzzle from the archives.</p></header>
+  <main>
+    <button class="primary" id="random">Random Daily Puzzle <span aria-hidden="true">→</span></button>
+    <p id="status" class="status" role="status" aria-live="polite" hidden></p>
+    <button id="repeat" class="secondary" hidden>Open this puzzle again</button>
+    <section class="latest" aria-labelledby="recent-label"><h2 id="recent-label">MOST RECENT</h2><div id="recent"></div></section>
+    <dl class="stats"><div><dt>Unique visits</dt><dd id="visits">0</dd></div><div><dt>Marked completed</dt><dd id="completed">0</dd></div></dl>
+    <nav class="actions"><a href="history.html" target="_blank">View history</a><button class="text" id="clear">Clear history</button></nav>
+  </main>
+  <footer>Independent utility. Not affiliated with Chess.com.<br>History stays in this browser. Completion is manual.</footer>
+  <dialog id="confirm"><h2>Clear your history?</h2><p>This removes all visits and completion marks from this browser. This cannot be undone.</p><div class="dialog-actions"><button id="cancel">Keep history</button><button id="confirm-clear" class="danger">Clear history</button></div></dialog>
+  <script type="module" src="ui.js"></script>
+</body></html>

@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Browser checks</title><body><pre id="result">RUNNING</pre><script type="module">
+import { createService } from '../service.js';
+const results = [];
+const data = {};
+const opened = [];
+const fixture = { title: 'Tactical Opportunity', url: 'https://www.chess.com/daily/2009-02-20', publish_time: 1235116800 };
+window.chrome = { runtime: { getURL: path => location.origin + '/' + path }, storage: { onChanged: { addListener() {} } } };
+const dispatch = createService({ storage: { get: async () => structuredClone(data), set: async value => Object.assign(data, structuredClone(value)) }, tabs: { create: async args => opened.push(args), update: async (id,args) => opened.push(args) }, fetcher: async () => new Response(JSON.stringify(fixture)) });
+chrome.runtime.sendMessage = message => dispatch(message, { url: location.origin + '/popup.html' });
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const check = (value, label) => { if (!value) throw new Error(label); results.push('PASS ' + label); };
+async function ui(file) {
+  const frame = document.createElement('iframe'); frame.style = 'width:400px;height:650px;border:0'; document.body.append(frame);
+  const html = await (await fetch('../' + file)).text();
+  frame.srcdoc = html.replace('<head>', '<head><base href="' + location.origin + '/"><script>window.chrome=parent.chrome;<\/script>');
+  await new Promise(resolve => frame.onload = resolve); await pause(100);
+  return frame;
+}
+try {
+  const popup = await ui('popup.html'); const doc = popup.contentDocument;
+  check(doc.querySelector('#visits').textContent === '0', 'popup empty state');
+  doc.querySelector('#random').click(); await pause(150);
+  check(opened[0]?.url === fixture.url, 'popup opens validated puzzle URL');
+  check(doc.querySelector('#visits').textContent === '1', 'popup records visit');
+  doc.querySelector('.completion input').click(); await pause(100);
+  check(doc.querySelector('#completed').textContent === '1', 'manual completion updates statistics');
+  doc.querySelector('#random').click(); await pause(100);
+  check(!doc.querySelector('#repeat').hidden && doc.querySelector('#random').disabled, 'cached repeat offers reopen and countdown');
+  doc.querySelector('#repeat').click(); await pause(100);
+  check(opened.length === 2, 'repeat opens without another fetch');
+  const history = await ui('history.html'); const hd = history.contentDocument;
+  check(hd.querySelectorAll('.entry').length === 1, 'history renders visit');
+  hd.querySelector('.entry .text').click(); await pause(100);
+  check(hd.querySelectorAll('.entry').length === 0, 'history removes visit');
+  await chrome.runtime.sendMessage({ type: 'random' });
+  // A fresh popup proves state is read from storage rather than page memory.
+  const again = await ui('popup.html'); const ad = again.contentDocument;
+  check(ad.querySelector('#visits').textContent === '1', 'new popup reads stored history');
+  ad.querySelector('#clear').click();
+  check(ad.querySelector('dialog').open, 'clear requires confirmation');
+  ad.querySelector('#cancel').click();
+  check(ad.querySelector('#visits').textContent === '1', 'cancel keeps history');
+  ad.querySelector('#clear').click(); ad.querySelector('#confirm-clear').click(); await pause(100);
+  check(ad.querySelector('#visits').textContent === '0', 'confirmed clear removes history');
+  const content = document.createElement('iframe'); document.body.append(content); content.src = 'content-fixture.html';
+  await new Promise(resolve => content.onload = resolve);
+  for (let i = 0; i < 2; i++) { const script = content.contentDocument.createElement('script'); script.src = '/content.js'; content.contentDocument.body.append(script); await new Promise(resolve => script.onload = resolve); }
+  await pause(100);
+  check(content.contentDocument.querySelectorAll('#daily-shuffle-extension').length === 1, 'content script injects only once');
+  content.contentDocument.querySelector('#daily-shuffle-extension').remove(); await pause(1200);
+  check(content.contentDocument.querySelectorAll('#daily-shuffle-extension').length === 1, 'observer restores button after replacement');
+  content.contentWindow.history.pushState(null, '', '/play'); await pause(1100);
+  check(!content.contentDocument.querySelector('#daily-shuffle-extension'), 'SPA departure removes button');
+  content.contentWindow.history.pushState(null, '', '/daily/2009-02-21'); await pause(1100);
+  check(content.contentDocument.querySelectorAll('#daily-shuffle-extension').length === 1, 'SPA return restores one button');
+  document.querySelector('#result').textContent = results.join('\n') + '\nALL PASSED';
+} catch (error) { document.querySelector('#result').textContent = results.join('\n') + '\nFAIL ' + error.stack; }
+</script></body></html>

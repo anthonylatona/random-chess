@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Puzzle history · Daily Shuffle</title><link rel="stylesheet" href="ui.css"></head>
+<body class="history">
+  <header><span class="eyebrow">DAILY SHUFFLE</span><h1>Your puzzle history</h1><p>Most recent visits first. Solving is yours; completion marks are manual.</p></header>
+  <main>
+    <div class="toolbar"><button class="primary" id="random">Random Daily Puzzle <span aria-hidden="true">→</span></button><button class="text" id="clear">Clear history</button></div>
+    <p id="status" class="status" role="status" aria-live="polite" hidden></p><button id="repeat" class="secondary" hidden>Open this puzzle again</button>
+    <p id="count" class="muted"></p><div id="entries"></div>
+  </main>
+  <footer>Independent utility. Not affiliated with Chess.com. Stored only in this browser.</footer>
+  <dialog id="confirm"><h2>Clear your history?</h2><p>This removes all visits and completion marks from this browser. This cannot be undone.</p><div class="dialog-actions"><button id="cancel">Keep history</button><button id="confirm-clear" class="danger">Clear history</button></div></dialog>
+  <script type="module" src="ui.js"></script>
+</body></html>
